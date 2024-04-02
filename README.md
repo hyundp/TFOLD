@@ -1,3 +1,3 @@
 # offlineRL-with-diffusion
 
-Offline reinforcement learning Training via diffusion model based data augmentation
+Offline reinforcement learning training via diffusion model based data augmentation
