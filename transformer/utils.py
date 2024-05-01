@@ -4,7 +4,7 @@ import pickle
 import torch
 import numpy as np
 from torch.utils.data import Dataset
-from decision_transformer.d4rl_infos import REF_MIN_SCORE, REF_MAX_SCORE, D4RL_DATASET_STATS
+from data.d4rl_infos import REF_MIN_SCORE, REF_MAX_SCORE, D4RL_DATASET_STATS
 
 
 def discount_cumsum(x, gamma):
