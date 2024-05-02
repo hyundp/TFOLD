@@ -108,7 +108,7 @@ class DecisionTransformer(nn.Module):
         )
 
 
-    def forward(self, timesteps, states, actions, returns_to_go):
+    def forward(self, timesteps, states, actions):
 
         B, T, _ = states.shape
 
@@ -117,13 +117,13 @@ class DecisionTransformer(nn.Module):
         # time embeddings are treated similar to positional embeddings
         state_embeddings = self.embed_state(states) + time_embeddings
         action_embeddings = self.embed_action(actions) + time_embeddings
-        returns_embeddings = self.embed_rtg(returns_to_go) + time_embeddings
+        # returns_embeddings = self.embed_rtg(returns_to_go) + time_embeddings
         
         # stack rtg, states and actions and reshape sequence as
         # (r_0, s_0, a_0, r_1, s_1, a_1, r_2, s_2, a_2 ...)
         h = torch.stack(
-            (returns_embeddings, state_embeddings, action_embeddings), dim=1
-        ).permute(0, 2, 1, 3).reshape(B, 3 * T, self.h_dim)
+            (state_embeddings, action_embeddings), dim=1
+        ).permute(1, 0, 2).reshape(B, 2 * T, self.h_dim)
 
         h = self.embed_ln(h)
 
@@ -137,7 +137,7 @@ class DecisionTransformer(nn.Module):
         # that is, for each timestep (t) we have 3 output embeddings from the transformer,
         # each conditioned on all previous timesteps plus 
         # the 3 input variables at that timestep (r_t, s_t, a_t) in sequence.
-        h = h.reshape(B, T, 3, self.h_dim).permute(0, 2, 1, 3)
+        h = h.reshape(B, T, 2, self.h_dim).permute(1, 0, 2)
 
         # get predictions
         return_preds = self.predict_rtg(h[:,2])     # predict next rtg given r, s, a
