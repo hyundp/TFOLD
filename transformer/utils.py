@@ -64,7 +64,7 @@ def evaluate_on_env(model, device, context_len, env, rtg_target, rtg_scale,
                                 dtype=torch.float32, device=device)
             states = torch.zeros((eval_batch_size, max_test_ep_len, state_dim),
                                 dtype=torch.float32, device=device)
-            rewards_to_go = torch.zeros((eval_batch_size, max_test_ep_len, 1),
+            rewards = torch.zeros((eval_batch_size, max_test_ep_len, 1),
                                 dtype=torch.float32, device=device)
 
             # init episode
@@ -127,21 +127,27 @@ class D4RLTrajectoryDataset(Dataset):
         # calculate min len of traj, state mean and variance
         # and returns_to_go for all traj
         min_len = 10**6
-        states = []
+        states, next_states = [], []
         for traj in self.trajectories:
             traj_len = traj['observations'].shape[0]
             min_len = min(min_len, traj_len)
             states.append(traj['observations'])
-            # calculate returns to go and rescale them
-            traj['returns_to_go'] = discount_cumsum(traj['rewards'], 1.0) / rtg_scale
+            next_states.append(traj['next_observations'])
+            # # calculate returns to go and rescale them
+            # traj['returns_to_go'] = discount_cumsum(traj['rewards'], 1.0) / rtg_scale
 
         # used for input normalization
         states = np.concatenate(states, axis=0)
         self.state_mean, self.state_std = np.mean(states, axis=0), np.std(states, axis=0) + 1e-6
+        
+        # used for output normalization
+        next_states = np.concatenate(next_states, axis=0)
+        self.next_state_mean, self.next_state_std = np.mean(next_states, axis=0), np.std(next_states, axis=0) + 1e-6
 
-        # normalize states
+        # normalize states, next_states
         for traj in self.trajectories:
             traj['observations'] = (traj['observations'] - self.state_mean) / self.state_std
+            traj['next_observations'] = (traj['next_observations'] - self.next_state_mean) / self.next_state_std
 
     def get_state_stats(self):
         return self.state_mean, self.state_std
@@ -159,7 +165,8 @@ class D4RLTrajectoryDataset(Dataset):
 
             states = torch.from_numpy(traj['observations'][si : si + self.context_len])
             actions = torch.from_numpy(traj['actions'][si : si + self.context_len])
-            returns_to_go = torch.from_numpy(traj['returns_to_go'][si : si + self.context_len])
+            rewards = torch.from_numpy(traj['rewards'][si : si + self.context_len])
+            next_states = torch.from_numpy(traj['next_observations'][si : si + self.context_len])
             timesteps = torch.arange(start=si, end=si+self.context_len, step=1)
 
             # all ones since no padding
@@ -174,6 +181,13 @@ class D4RLTrajectoryDataset(Dataset):
                                 torch.zeros(([padding_len] + list(states.shape[1:])),
                                 dtype=states.dtype)],
                                dim=0)
+    
+            next_states = torch.from_numpy(traj['next_observations'])
+            next_states = torch.cat([next_states,
+                                torch.zeros(([padding_len] + list(next_states.shape[1:])),
+                                dtype=next_states.dtype)],
+                               dim=0)                           
+                            
 
             actions = torch.from_numpy(traj['actions'])
             actions = torch.cat([actions,
@@ -181,10 +195,10 @@ class D4RLTrajectoryDataset(Dataset):
                                 dtype=actions.dtype)],
                                dim=0)
 
-            returns_to_go = torch.from_numpy(traj['returns_to_go'])
-            returns_to_go = torch.cat([returns_to_go,
-                                torch.zeros(([padding_len] + list(returns_to_go.shape[1:])),
-                                dtype=returns_to_go.dtype)],
+            rewards = torch.from_numpy(traj['rewards'])
+            rewards = torch.cat([rewards,
+                                torch.zeros(([padding_len] + list(rewards.shape[1:])),
+                                dtype=rewards.dtype)],
                                dim=0)
 
             timesteps = torch.arange(start=0, end=self.context_len, step=1)
@@ -193,4 +207,4 @@ class D4RLTrajectoryDataset(Dataset):
                                    torch.zeros(padding_len, dtype=torch.long)],
                                   dim=0)
 
-        return  timesteps, states, actions, returns_to_go, traj_mask
+        return  timesteps, states, next_states, actions, rewards, traj_mask
