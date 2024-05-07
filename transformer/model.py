@@ -1,7 +1,10 @@
+import math
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+torch.set_printoptions(profile="full")
 class MaskedCausalAttention(nn.Module):
     def __init__(self, h_dim, max_T, n_heads, drop_p):
         super().__init__()
@@ -89,26 +92,26 @@ class DecisionTransformer(nn.Module):
         ### projection heads (project to embedding)
         self.embed_ln = nn.LayerNorm(h_dim)
         self.embed_timestep = nn.Embedding(max_timestep, h_dim)
-        self.embed_rtg = torch.nn.Linear(1, h_dim)
+        self.embed_reward = torch.nn.Linear(1, h_dim)
         self.embed_state = torch.nn.Linear(state_dim, h_dim)
+        self.embed_action = torch.nn.Linear(act_dim, h_dim)
 
         # # discrete actions
         # self.embed_action = torch.nn.Embedding(act_dim, h_dim)
         # use_action_tanh = False # False for discrete actions
 
         # continuous actions
-        self.embed_action = torch.nn.Linear(act_dim, h_dim)
-        use_action_tanh = True # True for continuous actions
+        # use_action_tanh = True # True for continuous actions
         
         ### prediction heads
-        self.predict_rtg = torch.nn.Linear(h_dim, 1)
+        self.predict_reward = torch.nn.Linear(h_dim, 1)
         self.predict_state = torch.nn.Linear(h_dim, state_dim)
-        self.predict_action = nn.Sequential(
-            *([nn.Linear(h_dim, act_dim)] + ([nn.Tanh()] if use_action_tanh else []))
-        )
+        # self.predict_action = nn.Sequential(
+        #     *([nn.Linear(h_dim, act_dim)] + ([nn.Tanh()] if use_action_tanh else []))
+        # )
 
 
-    def forward(self, timesteps, states, actions):
+    def forward(self, timesteps, rewards, states, actions):
 
         B, T, _ = states.shape
 
@@ -117,13 +120,28 @@ class DecisionTransformer(nn.Module):
         # time embeddings are treated similar to positional embeddings
         state_embeddings = self.embed_state(states) + time_embeddings
         action_embeddings = self.embed_action(actions) + time_embeddings
-        # returns_embeddings = self.embed_rtg(returns_to_go) + time_embeddings
+        reward_embeddings = self.embed_reward(rewards) + time_embeddings
         
+        # print("state shape: ", state_embeddings.shape)
+        # print("action shape: ", action_embeddings.shape)
+        # print("reward shape: ", reward_embeddings.shape)
+        
+        # print()
+        
+        # print("state: ", state_embeddings)
+        # print("action: ", action_embeddings)
+        # print("reward: ", reward_embeddings)
+                
         # stack rtg, states and actions and reshape sequence as
         # (r_0, s_0, a_0, r_1, s_1, a_1, r_2, s_2, a_2 ...)
+        # -> (s_0, a_0, r_0, ... 로 만든다.)
         h = torch.stack(
-            (state_embeddings, action_embeddings), dim=1
-        ).permute(1, 0, 2).reshape(B, 2 * T, self.h_dim)
+            (state_embeddings, action_embeddings, reward_embeddings), dim=1
+        ).permute(0, 2, 1, 3).reshape(B, 3 * T, self.h_dim)
+
+
+        # (s_0, a_0, r_0, s_1, a_1, r_1, ..., s_t, a_t, r_t 확인 완료)
+        # print("h: ", h)
 
         h = self.embed_ln(h)
 
@@ -137,12 +155,20 @@ class DecisionTransformer(nn.Module):
         # that is, for each timestep (t) we have 3 output embeddings from the transformer,
         # each conditioned on all previous timesteps plus 
         # the 3 input variables at that timestep (r_t, s_t, a_t) in sequence.
-        h = h.reshape(B, T, 2, self.h_dim).permute(1, 0, 2)
+        
+        # -> (s_t, a_t, r_t)
+        h = h.reshape(B, T, 3, self.h_dim).permute(0, 2, 1, 3)
+        
+        
+        # (s,a,r 순서 확인 완료)
+        # print("h[:,1]: ", h[:, 1])
+        # print("h[:,2]: ", h[:, 2])
 
         # get predictions
-        return_preds = self.predict_rtg(h[:,2])     # predict next rtg given r, s, a
-        state_preds = self.predict_state(h[:,2])    # predict next state given r, s, a
-        action_preds = self.predict_action(h[:,1])  # predict action given r, s
+        return_preds = self.predict_reward(h[:,1])     # predict reward given s, a 
+        next_state_preds = self.predict_state(h[:,2])    # predict next state given -> s, a, r
+        
+        # action_preds = self.predict_action(h[:,1])  # predict action given r, s
 
-        return state_preds, action_preds, return_preds
+        return next_state_preds, return_preds
         
