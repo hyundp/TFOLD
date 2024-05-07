@@ -25,7 +25,7 @@ def get_d4rl_dataset_stats(env_d4rl_name):
     return D4RL_DATASET_STATS[env_d4rl_name]
 
 
-def evaluate_on_env(model, device, context_len, env, rtg_target, rtg_scale,
+def evaluate_on_env(model, device, context_len, env,
                     num_eval_ep=10, max_test_ep_len=1000,
                     state_mean=None, state_std=None, render=False):
 
@@ -70,7 +70,7 @@ def evaluate_on_env(model, device, context_len, env, rtg_target, rtg_scale,
             # init episode
             running_state = env.reset()
             running_reward = 0
-            running_rtg = rtg_target / rtg_scale
+            # running_rtg = rtg_target / rtg_scale
 
             for t in range(max_test_ep_len):
 
@@ -81,21 +81,28 @@ def evaluate_on_env(model, device, context_len, env, rtg_target, rtg_scale,
                 states[0, t] = (states[0, t] - state_mean) / state_std
 
                 # calcualate running rtg and add it in placeholder
-                running_rtg = running_rtg - (running_reward / rtg_scale)
-                rewards_to_go[0, t] = running_rtg
+                # running_rtg = running_rtg - (running_reward / rtg_scale)
+                # rewards_to_go[0, t] = running_rtg
 
                 if t < context_len:
-                    _, act_preds, _ = model.forward(timesteps[:,:context_len],
+                    state_preds, reward_preds = model.forward(timesteps[:,:context_len],
+                                                rewards[:,:context_len],
                                                 states[:,:context_len],
                                                 actions[:,:context_len],
-                                                rewards_to_go[:,:context_len])
-                    act = act_preds[0, t].detach()
+                                                # rewards_to_go[:,:context_len]
+                    )
+                                                
+                    state = state_preds[0, t].detach()
+                    reward = reward_preds[0, t].detach()
                 else:
-                    _, act_preds, _ = model.forward(timesteps[:,t-context_len+1:t+1],
+                    state_preds, reward_preds = model.forward(timesteps[:,t-context_len+1:t+1],
+                                                rewards[:,:t-context_len+1:t+1],
                                                 states[:,t-context_len+1:t+1],
                                                 actions[:,t-context_len+1:t+1],
-                                                rewards_to_go[:,t-context_len+1:t+1])
-                    act = act_preds[0, -1].detach()
+                                                # rewards_to_go[:,t-context_len+1:t+1]
+                                                )
+                    state = state_preds[0, -1].detach()
+                    reward = reward_preds[0, -1].detach()
 
                 running_state, running_reward, done, _ = env.step(act.cpu().numpy())
 
@@ -116,7 +123,7 @@ def evaluate_on_env(model, device, context_len, env, rtg_target, rtg_scale,
 
 
 class D4RLTrajectoryDataset(Dataset):
-    def __init__(self, dataset_path, context_len, rtg_scale):
+    def __init__(self, dataset_path, context_len):
 
         self.context_len = context_len
 
