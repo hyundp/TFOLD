@@ -134,27 +134,31 @@ class D4RLTrajectoryDataset(Dataset):
         # calculate min len of traj, state mean and variance
         # and returns_to_go for all traj
         min_len = 10**6
-        states, next_states = [], []
+        states, next_states, rewards = [], [], []
         for traj in self.trajectories:
             traj_len = traj['observations'].shape[0]
             min_len = min(min_len, traj_len)
             states.append(traj['observations'])
             next_states.append(traj['next_observations'])
+            rewards.append(traj['rewards'])
             # # calculate returns to go and rescale them
             # traj['returns_to_go'] = discount_cumsum(traj['rewards'], 1.0) / rtg_scale
 
-        # used for input normalization
+        # used for input, output normalization
         states = np.concatenate(states, axis=0)
         self.state_mean, self.state_std = np.mean(states, axis=0), np.std(states, axis=0) + 1e-6
         
-        # used for output normalization
         next_states = np.concatenate(next_states, axis=0)
         self.next_state_mean, self.next_state_std = np.mean(next_states, axis=0), np.std(next_states, axis=0) + 1e-6
+        
+        rewards = np.concatenate(rewards, axis=0)
+        self.reward_mean, self.reward_std = np.mean(rewards, axis=0), np.std(rewards, axis=0) + 1e-6
 
-        # normalize states, next_states
+        # normalize states, next_states, rewards
         for traj in self.trajectories:
             traj['observations'] = (traj['observations'] - self.state_mean) / self.state_std
             traj['next_observations'] = (traj['next_observations'] - self.next_state_mean) / self.next_state_std
+            traj['rewards'] = (traj['rewards'] - self.reward_mean) / self.reward_std
 
     def get_state_stats(self):
         return self.state_mean, self.state_std
