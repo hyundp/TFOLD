@@ -123,19 +123,24 @@ def evaluate_on_env(model, device, context_len, env,
 
 
 class D4RLTrajectoryDataset(Dataset):
-    def __init__(self, dataset_path, context_len):
+    def __init__(self, dataset_path, context_len, val=None, val_dataset_path=None):
 
         self.context_len = context_len
 
         # load dataset
-        with open(dataset_path, 'rb') as f:
-            self.trajectories = pickle.load(f)
+        if val:
+            with open(val_dataset_path, 'rb') as f:
+                self.trajectories = pickle.load(f)
+        else:    
+            with open(dataset_path, 'rb') as f:
+                self.trajectories = pickle.load(f)
 
         # calculate min len of traj, state mean and variance
         # and returns_to_go for all traj
         min_len = 10**6
         states, next_states, rewards = [], [], []
         for traj in self.trajectories:
+            # print(traj)
             traj_len = traj['observations'].shape[0]
             min_len = min(min_len, traj_len)
             states.append(traj['observations'])
