@@ -3,9 +3,39 @@ import time
 import pickle
 import torch
 import numpy as np
+import matplotlib.pyplot as plt
 from torch.utils.data import Dataset
 from data.d4rl_infos import REF_MIN_SCORE, REF_MAX_SCORE, D4RL_DATASET_STATS
 
+
+def get_dynamic_mse(dataset, env):
+    
+    dynamic_mse = []
+    
+    for traj in dataset:
+        dynamic_se = []
+        for transit in traj:
+        # get state, action, reward
+            state = "transit state"
+            action = "transit action"
+            next_state = "transit ns"
+            reward = "transit reward"
+            
+            env.state = state
+            running_next_state, running_reward = env.step(action)
+            
+            dynamic_se.append(np.square(running_next_state - next_state)+np.square(running_reward - reward))
+        
+        dynamic_mse.append(np.mean(dynamic_se))
+    
+    return dynamic_mse
+
+def plot_mse_pdf(dataset, env):
+    dynamic_mse = get_dynamic_mse(dataset, env)
+    
+    plt.hist(dynamic_mse)
+    # 
+    return 
 
 def discount_cumsum(x, gamma):
     disc_cumsum = np.zeros_like(x)
@@ -123,7 +153,7 @@ def evaluate_on_env(model, device, context_len, env,
 
 
 class D4RLTrajectoryDataset(Dataset):
-    def __init__(self, dataset_path, context_len, val=None, val_dataset_path=None):
+    def __init__(self, dataset_path, context_len, val=None, val_dataset_path=None, not_path = None):
 
         self.context_len = context_len
 
@@ -131,7 +161,9 @@ class D4RLTrajectoryDataset(Dataset):
         if val:
             with open(val_dataset_path, 'rb') as f:
                 self.trajectories = pickle.load(f)
-        else:    
+        elif not_path:    
+            self.trajectories = dataset_path
+        else:
             with open(dataset_path, 'rb') as f:
                 self.trajectories = pickle.load(f)
 
@@ -151,6 +183,7 @@ class D4RLTrajectoryDataset(Dataset):
 
         # used for input, output normalization
         states = np.concatenate(states, axis=0)
+        # print("state shape: ", states.shape)
         self.state_mean, self.state_std = np.mean(states, axis=0), np.std(states, axis=0) + 1e-6
         
         next_states = np.concatenate(next_states, axis=0)
