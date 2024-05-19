@@ -48,7 +48,7 @@ def make_dataset(name, val_name, env_plus_type, dataset, train_fraction):
 				for k in val_data_:
 					val_episode_data[k] = np.array(val_data_[k])
 				val_paths.append(val_episode_data)
-				val_data_ = collections.defaultdict(list)		
+				val_data_ = collections.defaultdict(list)
 		episode_step += 1
 
 	# returns = np.array([np.sum(p['rewards']) for p in paths])
@@ -70,7 +70,7 @@ def make_dataset(name, val_name, env_plus_type, dataset, train_fraction):
 		
 	
 datasets = []
-train_fraction = 0.95
+train_fraction = 0.8
 
 for env_name in ['halfcheetah', 'hopper', 'walker2d']:
 	for dataset_type in ['medium', 'medium-replay', 'expert']:
