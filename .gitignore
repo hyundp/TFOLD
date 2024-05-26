@@ -1,3 +1,12 @@
 __pycache__
 *.pkl
-log/
+aug_diffusion/
+mtm/
+# log/
+# filtered/
+# augmented/
+# original/
+# train/
+# val/
+REDQ/
+
