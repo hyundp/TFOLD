@@ -4,13 +4,13 @@ from gym import utils
 import mujoco_py
 import pyrootutils
 
-path = pyrootutils.find_root(search_from=__file__, indicator=".aug-project-root")
+path = pyrootutils.find_root(search_from=__file__, indicator=".project-root")
 pyrootutils.set_root(path = path,
                      project_root_env_var = True,
                      dotenv = True,
                      pythonpath = True)
 
-import src.envs.mujoco_env as mujoco_env
+import transformer.gpt_transformer.src.envs.mujoco_env as mujoco_env
 
 
 # class HalfCheetahEnv(mujoco_env.MujocoEnv, utils.EzPickle):

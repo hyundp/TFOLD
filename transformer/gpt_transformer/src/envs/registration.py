@@ -3,15 +3,15 @@ import gym
 ENVIRONMENT_SPECS = (
     {
         'id': 'HopperExt-v2',
-        'entry_point': ('src.envs.hopper:ExtendedHopperEnv'),
+        'entry_point': ('transformer.gpt_transformer.src.envs.hopper:ExtendedHopperEnv'),
     },
     {
         'id': 'HalfCheetahExt-v2',
-        'entry_point': ('src.envs.half_cheetah:ExtendedHalfCheetahEnv'),
+        'entry_point': ('transformer.gpt_transformer.src.envs.half_cheetah:ExtendedHalfCheetahEnv'),
     },
     {
         'id': 'Walker2dExt-v2',
-        'entry_point': ('src.envs.walker2d:ExtendedWalker2dEnv'),
+        'entry_point': ('transformer.gpt_transformer.src.envs.walker2d:ExtendedWalker2dEnv'),
     },
 )
 

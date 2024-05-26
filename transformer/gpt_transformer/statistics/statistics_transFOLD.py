@@ -1,33 +1,27 @@
-import gym
-from gym.vector import AsyncVectorEnv
-#import gymnasium as gym
-import numpy as np
-import torch
+
 import argparse
-from tqdm import tqdm
-import pyrootutils
-import wandb
-import yaml
-from typing import List
 import os
 import time
+from typing import List
 
-path = pyrootutils.find_root(search_from=__file__, indicator=".aug-project-root")
+import gym
+#import gymnasium as gym
+import numpy as np
+import pyrootutils
+import torch
+# import wandb
+import yaml
+from gym.vector import AsyncVectorEnv
+from tqdm import tqdm
+
+path = pyrootutils.find_root(search_from=__file__, indicator=".project-root")
 pyrootutils.set_root(path = path,
                      project_root_env_var = True,
                      dotenv = True,
                      pythonpath = True)
 
 
-import src.envs as envs
-
-
-# from src.data.norm import MinMaxNormalizer, normalizer_factory
-# from src.diffusion.utils import make_inputs,  split_diffusion_transition, construct_diffusion_model
-# from corl.shared.utils  import get_saved_dataset
-# from corl.shared.buffer import DiffusionDataset
-#  # to register extended environments
-
+import transformer.gpt_transformer.src.envs as envs
 
 
 def transfer_flatten_to_sim(state, env):
@@ -47,12 +41,13 @@ def transfer_flatten_to_sim(state, env):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dataset', type=str, default='halfcheetah-medium-v2')
-    parser.add_argument('--data_path', type=str, default="C:/Develop/offlineRL-with-diffusion/transformer/data/augmented/halfcheetah-medium-v2.npz")
+    parser.add_argument('--env_name', type=str, default='halfcheetah')
+    parser.add_argument('--dataset', type=str, default='medium')
     parser.add_argument('--batch_num', type=int, default=6)
     parser.add_argument('--batch_id', type=int, default=0)
     parser.add_argument('--test_partial', action='store_true', default=False)
-    parser.add_argument('--percentage', type=float, default=0)
+    parser.add_argument('--percentage', type=float, default=1.0)
+    parser.add_argument('--type', type=str, default='filtered')
     args = parser.parse_args()
     
     # wandb.init(
@@ -62,15 +57,22 @@ if __name__ == '__main__':
     #     name = data_name
     # )
     
-    env = args.dataset.split('-')[0]
-    if env == 'hopper':
+    env_name = args.env_name
+    dataset = args.dataset
+    type = args.type
+    
+    DATA_PATH = 'transformer/gpt_transformer/src/data/'
+    
+    if env_name == 'hopper':
         env_nm = "HopperExt-v2"
-    elif env == 'halfcheetah':
+    elif env_name == 'halfcheetah':
         env_nm = "HalfCheetahExt-v2"
-    elif env == 'walker2d':
+    elif env_name == 'walker2d':
         env_nm = "Walker2dExt-v2"
 
-    original = np.load(f"data/{args.dataset}.npy", allow_pickle=True)
+
+    # get original dataset 
+    original = np.load(f"{DATA_PATH}/original/{env_name}-{dataset}-v2.pkl", allow_pickle=True)
     obs = []
     rewards = []
     for epi in original:
@@ -85,22 +87,17 @@ if __name__ == '__main__':
     reward_mean = rewards.mean(axis=0)
     reward_std = rewards.std(axis=0)+1e-3
 
-    data_name = args.data_path.split('/')[-1]
-    dir_path = args.data_path[:-len(data_name)]
-    samples = np.load(args.data_path, allow_pickle=True)
 
+    # get augmented or filtered dataset
+    samples = np.load(f'{DATA_PATH}/{type}/{env_name}-{dataset}-v2.npz', allow_pickle=True)
+
+    data = samples["data"]
+    config = samples["config"]
 
     dynamic_mse = []
     reward_mse = []
     real_rewards = []
     gen_rewards = []
-
-    if "npz" in data_name:
-        data = samples["data"]
-        config = samples["config"].item()
-    else:
-        data = samples
-        config = {}
 
     if args.test_partial:
         # np.random.seed(1)
@@ -164,12 +161,11 @@ if __name__ == '__main__':
     gen_rewards = np.array(gen_rewards)
     
 
-    data_nm = data_name.split('.')[0]
-    resfolder = f"./statistics/{args.dataset}/{data_nm}_{args.percentage}"
+    resfolder = f"{DATA_PATH}/statistics/{type}/"
     if not os.path.exists(resfolder):
         os.makedirs(resfolder)
 
-    np.savez(f"{resfolder}/batch{args.batch_id}.npz", 
+    np.savez(f"{resfolder}/{env_name}-{dataset}-v2.npz", 
              dynamic_mse=dynamic_mse, 
              reward_mse=reward_mse, 
              real_rewards=real_rewards,
