@@ -9,4 +9,7 @@ mtm/
 # train/
 # val/
 REDQ/
-
+*.csv
+*.npz
+*.npy
+*.pt
