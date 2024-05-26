@@ -1,3 +1,3 @@
-# offlineRL-with-diffusion
+# transFOLD
 
-Offline reinforcement learning training via diffusion model based data augmentation
+Transformer Filtering for Offline Learning Dynamics
