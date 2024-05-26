@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-torch.set_printoptions(profile="full")
+# torch.set_printoptions(profile="full")
 class MaskedCausalAttention(nn.Module):
     def __init__(self, h_dim, max_T, n_heads, drop_p):
         super().__init__()
@@ -166,7 +166,7 @@ class DecisionTransformer(nn.Module):
 
         # get predictions
         return_preds = self.predict_reward(h[:,1])     # predict reward given s, a 
-        next_state_preds = self.predict_state(h[:,2])    # predict next state given -> s, a, r
+        next_state_preds = self.predict_state(h[:,2])    # predict next state given -> s, a, r  
         
         # action_preds = self.predict_action(h[:,1])  # predict action given r, s
 

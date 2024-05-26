@@ -1,3 +1,4 @@
+import os
 import random
 import time
 import pickle
@@ -5,37 +6,15 @@ import torch
 import numpy as np
 import matplotlib.pyplot as plt
 from torch.utils.data import Dataset
-from data.d4rl_infos import REF_MIN_SCORE, REF_MAX_SCORE, D4RL_DATASET_STATS
+from transformer.gpt_transformer.src.data.d4rl_infos import REF_MIN_SCORE, REF_MAX_SCORE, D4RL_DATASET_STATS
 
 
-def get_dynamic_mse(dataset, env):
-    
-    dynamic_mse = []
-    
-    for traj in dataset:
-        dynamic_se = []
-        for transit in traj:
-        # get state, action, reward
-            state = "transit state"
-            action = "transit action"
-            next_state = "transit ns"
-            reward = "transit reward"
-            
-            env.state = state
-            running_next_state, running_reward = env.step(action)
-            
-            dynamic_se.append(np.square(running_next_state - next_state)+np.square(running_reward - reward))
-        
-        dynamic_mse.append(np.mean(dynamic_se))
-    
-    return dynamic_mse
-
-def plot_mse_pdf(dataset, env):
-    dynamic_mse = get_dynamic_mse(dataset, env)
-    
-    plt.hist(dynamic_mse)
-    # 
-    return 
+def make_dir(path):
+    try:
+        if not os.path.exists(path):
+            os.makedirs(path)
+    except OSError:
+        print("Error: Failed to create the directory.")
 
 def discount_cumsum(x, gamma):
     disc_cumsum = np.zeros_like(x)
