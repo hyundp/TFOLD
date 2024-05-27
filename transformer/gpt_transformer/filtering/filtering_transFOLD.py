@@ -1,16 +1,16 @@
 # import
+import argparse
 import os
 import sys
+
+import gym
 import numpy as np
 import pandas as pd
-import torch.nn.functional as F
-from torch.utils.data import Dataset, DataLoader
-import torch
-import gym
-from tqdm import tqdm
-import argparse
-
 import pyrootutils
+import torch
+import torch.nn.functional as F
+from torch.utils.data import DataLoader, Dataset
+from tqdm import tqdm
 
 path = pyrootutils.find_root(search_from=__file__, indicator=".project-root")
 pyrootutils.set_root(path = path,
@@ -18,10 +18,8 @@ pyrootutils.set_root(path = path,
                      dotenv = True,
                      pythonpath = True)
 
-from transformer.gpt_transformer.src.utils import D4RLTrajectoryDataset
 from transformer.gpt_transformer.src.model import DecisionTransformer
-
-
+from transformer.gpt_transformer.src.utils import D4RLTrajectoryDataset
 
 
 def filter(args):
@@ -112,7 +110,7 @@ def filter(args):
     aug_reward_mean, aug_reward_std = np.mean(aug_rewards, axis=0), np.std(aug_rewards, axis=0)
     
 
-    Percentage = 0.1 # 0.1 ~ 1
+    Percentage = args.percentage
 
     def filtering_transformer(augmented_dataset_sample, model, Percentage=Percentage):
         
@@ -229,6 +227,8 @@ if __name__ == '__main__':
     parser.add_argument('--k', type= int, default = 31)
     parser.add_argument('--n_blocks', type= int, default = 3)
     parser.add_argument('--n_heads', type= int, default = 1)
+    
+    parser.add_argument('--percentage', type= float, default = 0.1)
     
 
     args = parser.parse_args()
