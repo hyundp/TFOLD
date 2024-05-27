@@ -8,8 +8,8 @@ max_iter=600
 for env in "${env_name[@]}"; do
     for ds in "${dataset[@]}"; do
         for bs in "${batch_size[@]}"; do
-            echo "Running train script: $env-$ds batch_size=$batch_size max_iter=$max_iter"
-            python transformer/gpt_transformer/train/train_transFOLD.py --env_name $env_name --dataset $dataset --batch_size $bs --max_train_iters $max_iter
+            echo "Running train script: $env-$ds batch_size=$bs max_iter=$max_iter"
+            python transformer/gpt_transformer/train/train_transFOLD.py --env_name $env --dataset $ds --batch_size $bs --max_train_iters $max_iter
         done
     done
 done
