@@ -655,6 +655,10 @@ def train(config, args):
                 # wandb.log({
                 # "result/d4rl_normalized_score": np.max(np.mean(normalized_scores))
                 # })
+                print("---------------------------------------")
+                print(
+                    f"D4RL score: {np.max(np.mean(normalized_scores)):.3f}")
+                print("---------------------------------------")
                 evaluations.append(np.max(np.mean(normalized_scores)))
             model.train()
 
