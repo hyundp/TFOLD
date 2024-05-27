@@ -586,6 +586,8 @@ def train(config, args):
 
     print(f"Total parameters: {sum(p.numel() for p in model.parameters())}")
     trainloader_iter = cycle(trainloader)
+    
+    evaluations = []
     for step in trange(config.step, desc="Training"):
         batch = next(trainloader_iter)
         states, actions, returns, time_steps, mask = [b.to(config.device) for b in batch]
@@ -653,8 +655,18 @@ def train(config, args):
                 # wandb.log({
                 # "result/d4rl_normalized_score": np.max(np.mean(normalized_scores))
                 # })
+                evaluations.append(np.max(np.mean(normalized_scores)))
             model.train()
 
+
+    
+    config.evaluations = evaluations
+    if config.checkpoints_path is not None:
+        print(f"Checkpoints path: {config.checkpoints_path}")
+        with open(os.path.join(config.checkpoints_path, "config.yaml"), "w") as f:
+            pyrallis.dump(config, f)
+        np.save(os.path.join(config.checkpoints_path, f"evaluation_results.npy") ,np.array(evaluations))
+    
     if config.checkpoints_path is not None:
         checkpoint = {
             "model_state": model.state_dict(),
@@ -663,6 +675,7 @@ def train(config, args):
         }
         torch.save(checkpoint, os.path.join(config.checkpoints_path, "dt_checkpoint.pt"))
 
+    return evaluations
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
