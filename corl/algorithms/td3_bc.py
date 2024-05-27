@@ -353,6 +353,7 @@ def train(config, args):
     max_action = float(env.action_space.high[0])
 
     # Set seeds
+    config.seed = args.seed
     seed = config.seed
     set_seed(seed, env)
 
@@ -442,7 +443,7 @@ def train(config, args):
         print(f"Checkpoints path: {config.checkpoints_path}")
         with open(os.path.join(config.checkpoints_path, "config.yaml"), "w") as f:
             pyrallis.dump(config, f)
-        np.save(os.path.join(config.checkpoints_path, f"evaluation_results.npy") ,np.array(evaluations))
+        np.save(os.path.join(config.checkpoints_path, f"evaluation_results_{seed}.npy") ,np.array(evaluations))
     if config.checkpoints_path is not None and config.save_checkpoints:
         torch.save(
             trainer.state_dict(),
@@ -460,6 +461,7 @@ if __name__ == "__main__":
     parser.add_argument('--batch_size', type=int, default = 32)
     parser.add_argument('--max_train_iters', type= int, default = 200)
     parser.add_argument('--filtered', type= bool, default = True)
+    parser.add_argument('--seed', type= int, default = 0)
     
     args = parser.parse_args()
 

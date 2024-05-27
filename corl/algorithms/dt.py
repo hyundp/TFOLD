@@ -514,6 +514,7 @@ def train(config, args):
     filtered = args.filtered
     
     config.dataset = dataset
+    config.seed = args.seed
 
     set_seed(config.seed, deterministic_torch=config.deterministic_torch)
     # init wandb session for logging
@@ -624,7 +625,7 @@ def train(config, args):
         if step % config.eval_every == 0 or step == config.step - 1:
             model.eval()
             for target_return in config.target_returns:
-                eval_env.seed(config.eval_seed)
+                eval_env.seed(config.seed)
                 eval_returns = []
                 for _ in trange(config.eval_episodes, desc="Evaluation", leave=False):
                     eval_return, eval_len = eval_rollout(
@@ -669,7 +670,7 @@ def train(config, args):
         print(f"Checkpoints path: {config.checkpoints_path}")
         with open(os.path.join(config.checkpoints_path, "config.yaml"), "w") as f:
             pyrallis.dump(config, f)
-        np.save(os.path.join(config.checkpoints_path, f"evaluation_results.npy") ,np.array(evaluations))
+        np.save(os.path.join(config.checkpoints_path, f"evaluation_results_{config.seed}.npy") ,np.array(evaluations))
     
     if config.checkpoints_path is not None:
         checkpoint = {
@@ -688,6 +689,7 @@ if __name__ == "__main__":
     parser.add_argument('--batch_size', type=int, default = 128)
     parser.add_argument('--max_train_iters', type= int, default = 1000)
     parser.add_argument('--filtered', type= bool, default = True)
+    parser.add_argument('--seed', type= int, default = 0)
     
     args = parser.parse_args()
 
