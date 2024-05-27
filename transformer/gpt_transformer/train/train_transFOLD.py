@@ -28,7 +28,7 @@ pyrootutils.set_root(path = path,
 
 from transformer.gpt_transformer.src.model import DecisionTransformer
 from transformer.gpt_transformer.src.utils import (D4RLTrajectoryDataset,
-                                                   make_dir)
+                                                   check_batch, make_dir)
 
 # wandb.init(project='train_transFOLD') #wandb 사이트 Home에 들어가보면, 좌측에 "My Projects"에 프로젝트를 생성한다는 의미
 # wandb.run.name = 'training_loss' #실행 이름 설정
@@ -97,6 +97,10 @@ def train(args):
         DEVICE = torch.device('cpu')
         
 
+    # load validate preprocessing(normalization, fit padding) data
+
+    val_traj_dataset = D4RLTrajectoryDataset(TRAIN_DATA_PATH, k, val=True, val_dataset_path=VAL_DATA_PATH)
+    batch_size = check_batch(batch_size, len(val_traj_dataset))
 
     # load train preprocessing(normalization, fit padding) data
 
@@ -111,12 +115,6 @@ def train(args):
 
     ## get state stats from dataset
     state_mean, state_std = train_traj_dataset.get_state_stats()
-
-
-    # load validate preprocessing(normalization, fit padding) data
-
-    val_traj_dataset = D4RLTrajectoryDataset(TRAIN_DATA_PATH, k, val=True, val_dataset_path=VAL_DATA_PATH)
-    val_batch_size = batch_size if len(val_traj_dataset) >= batch_size else 32
 
     # define model
 
@@ -171,6 +169,7 @@ def train(args):
 
     print("device set to: " + str(DEVICE))
     print("dataset: " + prefix)
+    print("batch_size: " + str(batch_size))
     print("best model save path: " + save_best_model_path)
     print("log csv save path: " + log_csv_path)
 
@@ -242,7 +241,7 @@ def train(args):
         # validation
         model.eval()
         val_traj_data_loader = DataLoader(val_traj_dataset,
-                            batch_size=val_batch_size,
+                            batch_size=batch_size,
                             shuffle=True,
                             pin_memory=True,
                             drop_last=True)
