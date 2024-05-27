@@ -15,6 +15,13 @@ def make_dir(path):
             os.makedirs(path)
     except OSError:
         print("Error: Failed to create the directory.")
+        
+def check_batch(batch_size, val_length):
+    new_batch_size = batch_size
+    while (val_length < new_batch_size):
+        new_batch_size //= 2
+    
+    return new_batch_size
 
 def discount_cumsum(x, gamma):
     disc_cumsum = np.zeros_like(x)
