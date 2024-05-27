@@ -18,10 +18,9 @@ def make_dir(path):
 def make_dataset(original_name, train_name, val_name, env_plus_type, dataset, train_fraction):
 	N = dataset['rewards'].shape[0]
 	print("N: ", N)
-	train_size = int(train_fraction * N)
 	original_data_ = collections.defaultdict(list)
-	train_data_ = collections.defaultdict(list)
-	val_data_ = collections.defaultdict(list)
+	# train_data_ = collections.defaultdict(list)
+	# val_data_ = collections.defaultdict(list)
 
 	use_timeouts = False
 	if 'timeouts' in dataset:
@@ -38,27 +37,8 @@ def make_dataset(original_name, train_name, val_name, env_plus_type, dataset, tr
 			final_timestep = dataset['timeouts'][i]
 		else:
 			final_timestep = (episode_step == 1000-1)
-		if i < train_size:
-			for k in ['observations', 'next_observations', 'actions', 'rewards', 'terminals']:
-					train_data_[k].append(dataset[k][i])
-			if done_bool or final_timestep:
-				episode_step = 0
-				episode_data = {}
-				for k in train_data_:
-					episode_data[k] = np.array(train_data_[k])
-				train_paths.append(episode_data)
-				train_data_ = collections.defaultdict(list)
-		else:
-			for k in ['observations', 'next_observations', 'actions', 'rewards', 'terminals']:
-				val_data_[k].append(dataset[k][i])
-			if done_bool or final_timestep:
-				episode_step = 0
-				val_episode_data = {}
-				for k in val_data_:
-					val_episode_data[k] = np.array(val_data_[k])
-				val_paths.append(val_episode_data)
-				val_data_ = collections.defaultdict(list)
-				
+		
+		# make original dataset	
 		for k in ['observations', 'next_observations', 'actions', 'rewards', 'terminals']:
 			original_data_[k].append(dataset[k][i])
 		if done_bool or final_timestep:
@@ -68,7 +48,37 @@ def make_dataset(original_name, train_name, val_name, env_plus_type, dataset, tr
 				original_episode_data[k] = np.array(original_data_[k])
 			original_paths.append(original_episode_data)
 			original_data_ = collections.defaultdict(list)
+			
+		# if i < train_size:
+		# 	for k in ['observations', 'next_observations', 'actions', 'rewards', 'terminals']:
+		# 			train_data_[k].append(dataset[k][i])
+		# 	if done_bool or final_timestep:
+		# 		episode_step = 0
+		# 		episode_data = {}
+		# 		for k in train_data_:
+		# 			episode_data[k] = np.array(train_data_[k])
+		# 		train_paths.append(episode_data)
+		# 		train_data_ = collections.defaultdict(list)
+		# else:
+		# 	for k in ['observations', 'next_observations', 'actions', 'rewards', 'terminals']:
+		# 		val_data_[k].append(dataset[k][i])
+		# 	if done_bool or final_timestep:
+		# 		episode_step = 0
+		# 		val_episode_data = {}
+		# 		for k in val_data_:
+		# 			val_episode_data[k] = np.array(val_data_[k])
+		# 		val_paths.append(val_episode_data)
+		# 		val_data_ = collections.defaultdict(list)
+				
+
 		episode_step += 1
+	with open(original_name, 'wb') as f:
+		pickle.dump(original_paths, f)
+	
+	np.random.shuffle(original_paths)
+	train_size = int(train_fraction * len(original_paths))
+	train_paths = original_paths[:train_size]
+	val_paths = original_paths[train_size:]
 
 	# returns = np.array([np.sum(p['rewards']) for p in paths])
 	# num_samples = np.sum([p['rewards'].shape[0] for p in paths])
@@ -77,12 +87,11 @@ def make_dataset(original_name, train_name, val_name, env_plus_type, dataset, tr
 
 	# check expected split
 	print("env name: ", env_plus_type)
-	# print("train length: ", len(paths)*len(paths[0]['observations']))
-	# print("val length: ", len(val_paths)*len(paths[0]['observations']))
+	print("original n of traj: ", len(original_paths))
+	print("train n of traj: ", len(train_paths))
+	print("val n of traj: ", len(val_paths))
 	print("-----------------------------------------------------")
-	
-	with open(original_name, 'wb') as f:
-		pickle.dump(original_paths, f)
+
 	with open(train_name, 'wb') as f:
 		pickle.dump(train_paths, f)
 	with open(val_name, 'wb') as f:
