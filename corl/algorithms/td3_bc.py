@@ -12,7 +12,7 @@ import d4rl
 import gym
 import numpy as np
 import pyrallis
-# import wandb
+import wandb
 import pyrootutils
 import torch
 import torch.nn as nn
@@ -36,7 +36,7 @@ from corl.shared.utils import (compute_mean_std, eval_actor, get_dataset,
 from corl.shared.validation import validate
 
 TensorBatch = List[torch.Tensor]
-os.environ["WANDB_MODE"] = "offline"
+# os.environ["WANDB_MODE"] = "online"
 
 
 @dataclass
@@ -54,11 +54,12 @@ class TrainConfig:
     GDA: str = 'FOLD' # "gda only" 'gda with original' None
     data_mixture_type: str = 'mixed'
     GDA_id: str = None
+    file_path: str = ''
     
     # Wandb logging
-    project: str = '[NIPS]_'+env
-    group: str = "TD3_BC-D4RL"
-    name: str = "TD3_BC"
+    project: str = 'corl_transFOLD'
+    group: str = "TD3_BC"
+    name: str = ''
     diffusion_horizon: int = 31
     diffusion_backbone: str = 'mixer' # 'mixer', 'temporal'
     
@@ -101,9 +102,6 @@ class TrainConfig:
     dataset: str = None
 
     def __post_init__(self):
-        self.name = f"{self.name}-{self.env}-{self.s4rl_augmentation_type}-{str(uuid.uuid4())[:4]}"
-        if self.checkpoints_path is not None:
-            self.checkpoints_path = os.path.join(self.checkpoints_path, self.name)
         if self.s4rl_augmentation_type == 'identical':
             self.iteration = 1
         if self.GDA is None:
@@ -303,12 +301,18 @@ def train(config, args):
     batch_size = args.batch_size
     max_train_iters = args.max_train_iters
     filtered = args.filtered
+    data_type = 'filtered' if filtered else 'augmented'
+    config.seed = args.seed
     
+    config.name = f"TD3_BC_{data_type}_{env_name}-{dataset}_seed{config.seed}"
+    config.file_path = f'TD3_BC/{data_type}/{env_name}-{dataset}/{config.seed}/'
     config.dataset = dataset
     if config.checkpoints_path is not None:
+        config.checkpoints_path = os.path.join(config.checkpoints_path, config.file_path)    
         print(f"Checkpoints path: {config.checkpoints_path}")
         os.makedirs(config.checkpoints_path, exist_ok=True)
-    config.project = '[NIPS]_'+config.env
+
+    config.GDA = 'FOLD' if filtered else 'GTA'
     env = gym.make(config.env)
 
     state_dim = env.observation_space.shape[0]
@@ -353,7 +357,6 @@ def train(config, args):
     max_action = float(env.action_space.high[0])
 
     # Set seeds
-    config.seed = args.seed
     seed = config.seed
     set_seed(seed, env)
 
@@ -400,7 +403,11 @@ def train(config, args):
         trainer.load_state_dict(torch.load(policy_file))
         actor = trainer.actor
 
-    # wandb_init(vars(config))
+    wandb.init(
+                project = config.project,
+                group = config.group,
+                name = config.name,
+                )
 
     evaluations = []
     for t in tqdm(range(int(config.max_timesteps))):
@@ -432,24 +439,24 @@ def train(config, args):
                 f"{eval_score:.3f} , D4RL score: {normalized_eval_score:.3f}"
             )
             print("---------------------------------------")
-            log_dict = {"result/d4rl_normalized_score": normalized_eval_score,
-                        "d4rl_normalized_score": normalized_eval_score,
-                        "d4rl_normalized_score_mean": normalized_eval_std}
-            # wandb.log(log_dict)
+            # log_dict = {"result/d4rl_normalized_score": normalized_eval_score,
+            #             "d4rl_normalized_score": normalized_eval_score,
+            #             "d4rl_normalized_score_mean": normalized_eval_std}
+            wandb.log({"d4rl_normalized_score": normalized_eval_score})
             
-    
+    wandb.finish()
     config.evaluations = evaluations
     if config.checkpoints_path is not None:
         print(f"Checkpoints path: {config.checkpoints_path}")
         with open(os.path.join(config.checkpoints_path, "config.yaml"), "w") as f:
             pyrallis.dump(config, f)
-        np.save(os.path.join(config.checkpoints_path, f"evaluation_results_{seed}.npy") ,np.array(evaluations))
+        np.save(os.path.join(config.checkpoints_path, f"evaluation_results.npy") ,np.array(evaluations))
     if config.checkpoints_path is not None and config.save_checkpoints:
         torch.save(
             trainer.state_dict(),
             os.path.join(config.checkpoints_path, f"checkpoint_{t}.pt"),
         )
-
+    
     return evaluations
 
 
