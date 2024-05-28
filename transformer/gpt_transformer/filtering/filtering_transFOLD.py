@@ -66,7 +66,7 @@ def filter(args):
 
     # load augmented data
     AUG_DATA_PATH = f'transformer/gpt_transformer/src/data/augmented/{env_name}-{dataset}-v2.npz'
-    FILTERED_DATA_PATH = f'transformer/gpt_transformer/src/data/filtered/{env_name}-{dataset}_{Percentage}-v2.npz'
+    FILTERED_DATA_PATH = f'transformer/gpt_transformer/src/data/filtered/{env_name}-{dataset}-v2.npz'
 
     best_model = DecisionTransformer(
                 state_dim=state_dim,
