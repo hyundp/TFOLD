@@ -14,11 +14,9 @@ import pyrootutils
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import wandb
 from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
-
-# import wandb
-
 
 path = pyrootutils.find_root(search_from=__file__, indicator=".project-root")
 pyrootutils.set_root(path = path,
@@ -29,10 +27,6 @@ pyrootutils.set_root(path = path,
 from transformer.gpt_transformer.src.model import DecisionTransformer
 from transformer.gpt_transformer.src.utils import (D4RLTrajectoryDataset,
                                                    check_batch, make_dir)
-
-# wandb.init(project='train_transFOLD') #wandb 사이트 Home에 들어가보면, 좌측에 "My Projects"에 프로젝트를 생성한다는 의미
-# wandb.run.name = 'training_loss' #실행 이름 설정
-# wandb.run.save()
 
 
 # Define training method
@@ -67,6 +61,15 @@ def train(args):
     # evaluation parameter
     # max_eval_ep_len = 1000      # max len of one evaluation episode
     # num_eval_ep = 10            # num of evaluation episodes per iteration
+    
+    # wandb
+    wandb.init(
+        # set the wandb project where this run will be logged
+        project=args.wandb_project,
+        entity=args.wandb_entity,
+        group=args.wandb_group,
+        name=f"env-{env_name}-data-{args.dataset}-batch-{batch_size}-iter-{max_train_iters}"
+    )    
     
     if env_name == 'hopper':
         env = gym.make('Hopper-v2')
@@ -293,9 +296,7 @@ def train(args):
         mean_val_total_log_loss = np.mean(val_log_total_losses)
         mean_val_state_log_loss = np.mean(val_log_state_losses)
         mean_val_reward_log_loss = np.mean(val_log_reward_losses)
-        
-        # wandb logging
-        # wandb.log({'mean_total_log_loss':mean_total_log_loss, 'mean_val_total_log_loss':mean_val_total_log_loss})
+
 
         time_elapsed = str(datetime.now().replace(microsecond=0) - start_time)
 
@@ -328,6 +329,11 @@ def train(args):
         print("saving current model at: " + save_model_path)
         torch.save(model.state_dict(), save_model_path)
 
+        # wandb log
+        wandb.log({'Iteration': i_train_iter, 'train_loss': mean_total_log_loss, 'validation_loss': mean_val_total_log_loss})
+
+    # finish wandb
+    wandb.finish()
 
     print("=" * 60)
     print("finished training!")
@@ -369,6 +375,11 @@ if __name__ == '__main__':
     
     parser.add_argument('--state_weight', type= int, default = 1)
     parser.add_argument('--reward_weight', type= int, default = 1)
+    
+    # wandb config
+    parser.add_argument('--wandb_project', type=str, default="train-transFOLD")
+    parser.add_argument('--wandb_entity', type=str, default="")
+    parser.add_argument('--wandb_group', type=str, default="")
 
     args = parser.parse_args()
     
