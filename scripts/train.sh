@@ -2,8 +2,8 @@
 
 env_name=("halfcheetah" "hopper" "walker2d")
 dataset=('medium' 'medium-replay' 'medium-expert')
-batch_size=(32 64)
-max_iter=600
+batch_size=(32 64 128 256)
+max_iter=1500
 
 for env in "${env_name[@]}"; do
     for ds in "${dataset[@]}"; do
