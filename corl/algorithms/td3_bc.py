@@ -460,7 +460,7 @@ if __name__ == "__main__":
     parser.add_argument('--dataset', type= str, default = 'medium')
     parser.add_argument('--batch_size', type=int, default = 32)
     parser.add_argument('--max_train_iters', type= int, default = 200)
-    parser.add_argument('--filtered', type= bool, default = True)
+    parser.add_argument('--filtered', action='store_true')
     parser.add_argument('--seed', type= int, default = 0)
     
     args = parser.parse_args()
