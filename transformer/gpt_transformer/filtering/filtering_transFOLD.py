@@ -34,6 +34,8 @@ def filter(args):
     k = args.k # content len
     n_blocks = args.n_blocks
     n_heads = args.n_heads # transformer head
+    
+    Percentage = args.percentage
 
     # total updates = max_train_iters x num_updates_per_iter
 
@@ -64,7 +66,7 @@ def filter(args):
 
     # load augmented data
     AUG_DATA_PATH = f'transformer/gpt_transformer/src/data/augmented/{env_name}-{dataset}-v2.npz'
-    FILTERED_DATA_PATH = f'transformer/gpt_transformer/src/data/filtered/{env_name}-{dataset}-v2.npz'
+    FILTERED_DATA_PATH = f'transformer/gpt_transformer/src/data/filtered/{env_name}-{dataset}_{Percentage}-v2.npz'
 
     best_model = DecisionTransformer(
                 state_dim=state_dim,
@@ -110,7 +112,6 @@ def filter(args):
     aug_reward_mean, aug_reward_std = np.mean(aug_rewards, axis=0), np.std(aug_rewards, axis=0)
     
 
-    Percentage = args.percentage
 
     def filtering_transformer(augmented_dataset_sample, model, Percentage=Percentage):
         
