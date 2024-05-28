@@ -9,6 +9,7 @@ bert_transformer/
 # train/
 # val/
 REDQ/
+wandb/
 *.csv
 *.npz
 *.npy
