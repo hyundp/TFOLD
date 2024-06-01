@@ -302,7 +302,7 @@ def train(config, args):
     filtered = args.filtered
     data_type = 'filtered' if filtered else 'augmented'
     config.seed = args.seed
-    config.env = f"{env_name}-{dataset}-v2"
+    # config.env = f"{env_name}-{dataset}-v2"
     
     
     config.name = f"TD3_BC_{data_type}_{env_name}-{dataset}_seed{config.seed}"
@@ -315,7 +315,16 @@ def train(config, args):
 
 
     config.GDA = 'FOLD' if filtered else 'GTA'
-    env = gym.make(config.env)
+    # env = gym.make(config.env)
+    
+    if env_name == 'hopper':
+        env = gym.make('Hopper-v2')
+
+    elif env_name == 'halfcheetah':
+        env = gym.make('HalfCheetah-v2')
+
+    elif env_name == 'walker2d':
+        env = gym.make('Walker2d-v2')
 
     state_dim = env.observation_space.shape[0]
     action_dim = env.action_space.shape[0]
@@ -328,6 +337,8 @@ def train(config, args):
     else:
         config.datapath = f'{DATA_PATH}/augmented/{env_name}-{dataset}-v2.npz'
     
+    config.env = env_name
+    config.dataset = dataset
     dataset, metadata = get_dataset(config)
     
     # trajectory_data = np.load(f'./data/{config.env}.pkl', allow_pickle=True)

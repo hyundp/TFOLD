@@ -717,13 +717,24 @@ def train(config, args):
     dataset = args.dataset
     filtered = args.filtered
     
-    config.env = f'{env_name}-{dataset}-v2'
+    # config.env = f'{env_name}-{dataset}-v2'
 
     if config.checkpoints_path is not None:
         print(f"Checkpoints path: {config.checkpoints_path}")
         os.makedirs(config.checkpoints_path, exist_ok=True)
     config.project = config.env
-    env = gym.make(config.env)
+    
+
+    # env = gym.make(config.env)
+    
+    if env_name == 'hopper':
+        env = gym.make('Hopper-v2')
+
+    elif env_name == 'halfcheetah':
+        env = gym.make('HalfCheetah-v2')
+
+    elif env_name == 'walker2d':
+        env = gym.make('Walker2d-v2')
 
     state_dim = env.observation_space.shape[0]
     action_dim = env.action_space.shape[0]
@@ -737,6 +748,8 @@ def train(config, args):
     else:
         config.datapath = f'{DATA_PATH}/augmented/{env_name}-{dataset}-v2.npz'
 
+    config.env = env_name
+    config.dataset = dataset
     dataset, metadata = get_dataset(config)
     # trajectory_data = np.load(f'./data/{config.env}.pkl', allow_pickle=True)
     for k, v in metadata.items():
