@@ -12,12 +12,13 @@ import d4rl
 import gym
 import numpy as np
 import pyrallis
-import wandb
 import pyrootutils
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from tqdm import tqdm
+
+import wandb
 
 path = pyrootutils.find_root(search_from = __file__, indicator=".project-root")
 pyrootutils.set_root(path = path,
@@ -49,7 +50,7 @@ class TrainConfig:
     adv_scale: float = 0.0001
     iteration: int = 2
     diffusion: DiffusionConfig = field(default_factory=DiffusionConfig)
-    env: str = "halfcheetah-medium-v2"  # OpenAI gym environment name
+    env: str = ""  # OpenAI gym environment name
     seed: int = 5  # Sets Gym, PyTorch and Numpy seeds
     GDA: str = 'FOLD' # "gda only" 'gda with original' None
     data_mixture_type: str = 'mixed'
@@ -303,6 +304,8 @@ def train(config, args):
     filtered = args.filtered
     data_type = 'filtered' if filtered else 'augmented'
     config.seed = args.seed
+    config.env = f"{env_name}-{dataset}-v2"
+    
     
     config.name = f"TD3_BC_{data_type}_{env_name}-{dataset}_seed{config.seed}"
     config.file_path = f'TD3_BC/{data_type}/{env_name}-{dataset}/{config.seed}/'

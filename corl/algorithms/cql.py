@@ -50,7 +50,7 @@ class TrainConfig:
     uniform_scale: float = 0.0003
     adv_scale: float = 0.0001
     iteration: int = 2
-    env: str = "halfcheetah-medium-v2"   # OpenAI gym environment name
+    env: str = ""   # OpenAI gym environment name
     seed: int = 0  # Sets Gym, PyTorch and Numpy seeds
     GDA: str = 'FOLD'  # "gda only" 'gda with original' None
     step: int = 1000000 # Generated Data Augmentation 모델 학습 step 수
@@ -718,6 +718,8 @@ def train(config, args):
     batch_size = args.batch_size
     max_train_iters = args.max_train_iters
     filtered = args.filtered
+    
+    config.env = f'{env_name}-{dataset}-v2'
     
     config.dataset = dataset
 
