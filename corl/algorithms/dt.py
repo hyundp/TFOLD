@@ -512,6 +512,15 @@ def train(config, args):
     filtered = args.filtered
     
     config.env = f'{env_name}-{dataset}-v2'
+    
+    # if env_name == 'hopper':
+    #     env = gym.make('Hopper-v2')
+
+    # elif env_name == 'halfcheetah':
+    #     env = gym.make('HalfCheetah-v2')
+
+    # elif env_name == 'walker2d':
+    #     env = gym.make('Walker2d-v2')
 
     config.seed = args.seed
 
