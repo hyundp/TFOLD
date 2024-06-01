@@ -315,6 +315,7 @@ def train(config, args):
         print(f"Checkpoints path: {config.checkpoints_path}")
         os.makedirs(config.checkpoints_path, exist_ok=True)
 
+
     config.GDA = 'FOLD' if filtered else 'GTA'
     env = gym.make(config.env)
 
@@ -329,8 +330,7 @@ def train(config, args):
     else:
         config.datapath = f'{DATA_PATH}/augmented/{env_name}-{dataset}-v2.npz'
     
-    config.env = env_name    
-    dataset, metadata = get_dataset(config)    
+    dataset, metadata = get_dataset(config)
     
     # trajectory_data = np.load(f'./data/{config.env}.pkl', allow_pickle=True)
     for k, v in metadata.items():
