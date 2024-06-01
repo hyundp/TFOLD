@@ -741,8 +741,6 @@ def train(config, args):
     else:
         config.datapath = f'{DATA_PATH}/augmented/{env_name}-{dataset}-v2.npz'
 
-    config.env = env_name    
-
     dataset, metadata = get_dataset(config)
     # trajectory_data = np.load(f'./data/{config.env}.pkl', allow_pickle=True)
     for k, v in metadata.items():
