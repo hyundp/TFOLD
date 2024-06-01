@@ -52,7 +52,7 @@ class TrainConfig:
     iteration: int = 2
     env: str = ""   # OpenAI gym environment name
     seed: int = 0  # Sets Gym, PyTorch and Numpy seeds
-    GDA: str = 'FOLD'  # "gda only" 'gda with original' None
+    GDA: str = ''  # "gda only" 'gda with original' None
     step: int = 1000000 # Generated Data Augmentation 모델 학습 step 수
     data_mixture_type: str = 'mixed'
     GDA_id: str = None
@@ -715,13 +715,9 @@ def train(config, args):
     
     env_name = args.env_name
     dataset = args.dataset
-    batch_size = args.batch_size
-    max_train_iters = args.max_train_iters
     filtered = args.filtered
     
     config.env = f'{env_name}-{dataset}-v2'
-    
-    config.dataset = dataset
 
     if config.checkpoints_path is not None:
         print(f"Checkpoints path: {config.checkpoints_path}")
@@ -878,7 +874,7 @@ def train(config, args):
     if config.checkpoints_path is not None and config.save_checkpoints:
         torch.save(
             trainer.state_dict(),
-            os.path.join(config.checkpoints_path, f"checkpoint_{t}.pt"),
+            os.path.join(config.checkpoints_path, f"checkpoint_{t+1}.pt"),
         )
     return evaluations
 
@@ -887,8 +883,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--env_name', type= str, default = 'halfcheetah')
     parser.add_argument('--dataset', type= str, default = 'medium')
-    parser.add_argument('--batch_size', type=int, default = 128)
-    parser.add_argument('--max_train_iters', type= int, default = 1000)
     parser.add_argument('--filtered', action='store_true')
     parser.add_argument('--seed', type= int, default = 0)
     

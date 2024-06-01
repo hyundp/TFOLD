@@ -41,7 +41,7 @@ class TrainConfig:
     env: str = ""  # OpenAI gym environment name
     seed: int = 0  # Sets Gym, PyTorch and Numpy seeds
     eval_seed: int = 42
-    GDA: str = 'FOLD'  # "gda only" 'gda with original' None
+    GDA: str = ''  # "gda only" 'gda with original' None
     step: int = 100000 # Generated Data Augmentation 모델 학습 step 수
     data_mixture_type: str = 'mixed'
     GDA_id: str = None
@@ -509,13 +509,10 @@ def train(config, args):
     
     env_name = args.env_name
     dataset = args.dataset
-    batch_size = args.batch_size
-    max_train_iters = args.max_train_iters
     filtered = args.filtered
     
     config.env = f'{env_name}-{dataset}-v2'
-    
-    config.dataset = dataset
+
     config.seed = args.seed
 
     set_seed(config.seed, deterministic_torch=config.deterministic_torch)
@@ -688,8 +685,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--env_name', type= str, default = 'halfcheetah')
     parser.add_argument('--dataset', type= str, default = 'medium')
-    parser.add_argument('--batch_size', type=int, default = 128)
-    parser.add_argument('--max_train_iters', type= int, default = 1000)
     parser.add_argument('--filtered', action='store_true')
     parser.add_argument('--seed', type= int, default = 0)
     

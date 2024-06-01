@@ -52,7 +52,7 @@ class TrainConfig:
     diffusion: DiffusionConfig = field(default_factory=DiffusionConfig)
     env: str = ""  # OpenAI gym environment name
     seed: int = 5  # Sets Gym, PyTorch and Numpy seeds
-    GDA: str = 'FOLD' # "gda only" 'gda with original' None
+    GDA: str = '' # "gda only" 'gda with original' None
     data_mixture_type: str = 'mixed'
     GDA_id: str = None
     file_path: str = ''
@@ -299,8 +299,6 @@ def train(config, args):
     
     env_name = args.env_name
     dataset = args.dataset
-    batch_size = args.batch_size
-    max_train_iters = args.max_train_iters
     filtered = args.filtered
     data_type = 'filtered' if filtered else 'augmented'
     config.seed = args.seed
@@ -309,7 +307,7 @@ def train(config, args):
     
     config.name = f"TD3_BC_{data_type}_{env_name}-{dataset}_seed{config.seed}"
     config.file_path = f'TD3_BC/{data_type}/{env_name}-{dataset}/{config.seed}/'
-    config.dataset = dataset
+
     if config.checkpoints_path is not None:
         config.checkpoints_path = os.path.join(config.checkpoints_path, config.file_path)    
         print(f"Checkpoints path: {config.checkpoints_path}")
@@ -457,7 +455,7 @@ def train(config, args):
     if config.checkpoints_path is not None and config.save_checkpoints:
         torch.save(
             trainer.state_dict(),
-            os.path.join(config.checkpoints_path, f"checkpoint_{t}.pt"),
+            os.path.join(config.checkpoints_path, f"checkpoint_{t+1}.pt"),
         )
     
     return evaluations
@@ -468,8 +466,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--env_name', type= str, default = 'halfcheetah')
     parser.add_argument('--dataset', type= str, default = 'medium')
-    parser.add_argument('--batch_size', type=int, default = 32)
-    parser.add_argument('--max_train_iters', type= int, default = 200)
     parser.add_argument('--filtered', action='store_true')
     parser.add_argument('--seed', type= int, default = 0)
     
