@@ -300,8 +300,10 @@ def train(config, args):
     env_name = args.env_name
     dataset = args.dataset
     filtered = args.filtered
+    original = args.original
     
-    if config.GDA is None or config.GDA == 'None':
+    if original:
+        config.GDA = None
         data_type = 'original'
     else:
         if filtered:
@@ -489,6 +491,7 @@ if __name__ == "__main__":
     parser.add_argument('--env_name', type= str, default = 'halfcheetah')
     parser.add_argument('--dataset', type= str, default = 'medium')
     parser.add_argument('--filtered', action='store_true')
+    parser.add_argument('--original', action='store_true')
     parser.add_argument('--seed', type= int, default = 0)
     
     args = parser.parse_args()
