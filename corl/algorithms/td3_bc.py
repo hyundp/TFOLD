@@ -52,7 +52,7 @@ class TrainConfig:
     diffusion: DiffusionConfig = field(default_factory=DiffusionConfig)
     env: str = ""  # OpenAI gym environment name
     seed: int = 5  # Sets Gym, PyTorch and Numpy seeds
-    GDA: str = '' # "gda only" 'gda with original' None
+    GDA: str = None # "gda only" 'gda with original' None
     data_mixture_type: str = 'mixed'
     GDA_id: str = None
     file_path: str = ''
@@ -300,7 +300,18 @@ def train(config, args):
     env_name = args.env_name
     dataset = args.dataset
     filtered = args.filtered
-    data_type = 'filtered' if filtered else 'augmented'
+    
+    if config.GDA is None or config.GDA == 'None':
+        data_type = 'original'
+    else:
+        if filtered:
+            data_type = 'filtered'
+            config.GDA = 'FOLD'
+        else:
+            data_type = 'augmented'
+            config.GDA = 'GTA'
+    
+    
     config.seed = args.seed
     config.env = f"{env_name}-{dataset}-v2"
     
@@ -313,8 +324,8 @@ def train(config, args):
         print(f"Checkpoints path: {config.checkpoints_path}")
         os.makedirs(config.checkpoints_path, exist_ok=True)
 
-
-    config.GDA = 'FOLD' if filtered else 'GTA'
+    
+    
     env = gym.make(config.env)
     
     # if env_name == 'hopper':
