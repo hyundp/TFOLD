@@ -303,8 +303,8 @@ def train(config, args):
     original = args.original
     
     if original:
-        config.GDA = None
         data_type = 'original'
+        config.GDA = None
     else:
         if filtered:
             data_type = 'filtered'
