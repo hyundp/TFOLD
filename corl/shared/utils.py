@@ -179,7 +179,7 @@ def merge_dictionary(list_of_Dict: List[Dict]) -> Dict:
 
     for d in list_of_Dict:
         for k, v in d.items():
-            if k not in ['observations', 'next_observations', 'actions', 'rewards']:
+            if k not in ['observations', 'next_observations', 'actions', 'rewards', 'terminals']:
                 continue
             else:
                 if k not in merged_data.keys():

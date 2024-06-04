@@ -200,6 +200,7 @@ class D4RLTrajectoryDataset(Dataset):
             actions = torch.from_numpy(traj['actions'][si : si + self.context_len])
             rewards = torch.from_numpy(traj['rewards'][si : si + self.context_len])
             next_states = torch.from_numpy(traj['next_observations'][si : si + self.context_len])
+            terminals = torch.from_numpy(traj['terminals'][si : si + self.context_len])
             timesteps = torch.arange(start=si, end=si+self.context_len, step=1)
 
             # all ones since no padding
@@ -234,10 +235,16 @@ class D4RLTrajectoryDataset(Dataset):
                                 dtype=rewards.dtype)],
                                dim=0)
 
+            terminals = torch.from_numpy(traj['terminals'])
+            terminals = torch.cat([terminals,
+                                torch.zeros(([padding_len] + list(terminals.shape[1:])),
+                                dtype=terminals.dtype)],
+                               dim=0)
+
             timesteps = torch.arange(start=0, end=self.context_len, step=1)
 
             traj_mask = torch.cat([torch.ones(traj_len, dtype=torch.long),
                                    torch.zeros(padding_len, dtype=torch.long)],
                                   dim=0)
 
-        return  timesteps, states, next_states, actions, rewards, traj_mask
+        return  timesteps, states, next_states, actions, rewards, traj_mask, terminals

@@ -115,9 +115,9 @@ def filter(args):
 
     def filtering_transformer(augmented_dataset_sample, model, Percentage=Percentage):
         
-        filtered_dataset = pd.DataFrame(columns = ['states', 'next_states', 'actions', 'rewards', 'timesteps', 'traj_mask', 'mse'])
+        filtered_dataset = pd.DataFrame(columns = ['states', 'next_states', 'actions', 'rewards', 'timesteps', 'traj_mask', 'terminals', 'mse'])
         
-        states_list, next_states_list, actions_list, rewards_list, timesteps_list, traj_mask_list, mse_list = [], [], [], [], [], [], []
+        states_list, next_states_list, actions_list, rewards_list, timesteps_list, traj_mask_list, terminals_list, mse_list = [], [], [], [], [], [], [], []
         
         aug_dataset = D4RLTrajectoryDataset(augmented_dataset_sample, k, not_path=True)
 
@@ -127,7 +127,7 @@ def filter(args):
                                 pin_memory=True,
                                 drop_last=True)
                                 
-        for timesteps, states, next_states, actions, rewards, traj_mask in tqdm(aug_data_loader):
+        for timesteps, states, next_states, actions, rewards, traj_mask, terminals in tqdm(aug_data_loader):
             
             states_list.append(np.array(states.reshape(k, state_dim)))
             next_states_list.append(np.array(next_states.reshape(k, state_dim)))
@@ -135,6 +135,7 @@ def filter(args):
             rewards_list.append(np.array(rewards.reshape(-1,)))
             timesteps_list.append(np.array(np.squeeze(timesteps, axis=0)))
             traj_mask_list.append(np.array(np.squeeze(traj_mask, axis=0)))
+            terminals_list.append(np.array(np.squeeze(terminals, axis=0)))
 
             # normalization
             states = (states - aug_state_mean) / aug_state_std
@@ -177,6 +178,7 @@ def filter(args):
         filtered_dataset['rewards'] = rewards_list
         filtered_dataset['timesteps'] = timesteps_list
         filtered_dataset['traj_mask'] = traj_mask_list
+        filtered_dataset['terminals'] = terminals_list
         filtered_dataset['mse'] = mse_list
         
         filtered_dataset.sort_values(by='mse', ascending=True, inplace=True)
@@ -198,6 +200,7 @@ def filter(args):
                                         'rewards': np.array(filtered_dataset['rewards'][i]),
                                         'timesteps': np.array(filtered_dataset['timesteps'][i]),
                                         'traj_mask': np.array(filtered_dataset['traj_mask'][i]),
+                                        'terminals': np.array(filtered_dataset['terminals'][i]),
                                         'mse': np.array(filtered_dataset['mse'][i]),
                                         })
             

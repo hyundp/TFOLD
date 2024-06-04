@@ -186,7 +186,7 @@ def train(args):
         
         for _ in range(num_updates_per_iter):
             try:
-                timesteps, states, next_states, actions, rewards, traj_mask = next(train_data_iter)
+                timesteps, states, next_states, actions, rewards, traj_mask, terminals = next(train_data_iter)
             except StopIteration:
                 train_traj_data_loader = DataLoader(train_traj_dataset,
                                         batch_size=batch_size,
@@ -195,7 +195,7 @@ def train(args):
                                         drop_last=True)
                                         
                 train_data_iter = iter(train_traj_data_loader)
-                timesteps, states, next_states, actions, rewards, traj_mask = next(train_data_iter)
+                timesteps, states, next_states, actions, rewards, traj_mask, terminals = next(train_data_iter)
 
             timesteps = timesteps.to(DEVICE)	# B x T
             states = states.to(DEVICE)			# B x T x state_dim
@@ -248,7 +248,7 @@ def train(args):
                             shuffle=True,
                             pin_memory=True,
                             drop_last=True)
-        for val_timesteps, val_states, val_next_states, val_actions, val_rewards, val_traj_mask in val_traj_data_loader:
+        for val_timesteps, val_states, val_next_states, val_actions, val_rewards, val_traj_mask, val_terminals in val_traj_data_loader:
             
             val_timesteps = val_timesteps.to(DEVICE)	# B x T
             val_states = val_states.to(DEVICE)			# B x T x state_dim
