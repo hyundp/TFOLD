@@ -479,7 +479,7 @@ def train(config, args):
     if config.checkpoints_path is not None and config.save_checkpoints:
         torch.save(
             trainer.state_dict(),
-            os.path.join(config.checkpoints_path, f"checkpoint_{t+1}.pt"),
+            os.path.join(config.checkpoints_path, f"checkpoint_{t}.pt"),
         )
     
     return evaluations
