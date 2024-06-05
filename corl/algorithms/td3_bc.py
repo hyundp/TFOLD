@@ -72,7 +72,7 @@ class TrainConfig:
 
     step: int = 1000000 # Generated Data Augmentation 모델 학습 step 수
 
-    eval_freq: int = int(5e4)  # How often (time steps) we evaluate
+    eval_freq: int = int(5e3)  # How often (time steps) we evaluate
     val_freq: int = int(1e5) # Measuring Q Overestimation
     n_episodes: int = 10   # How many episodes run during evaluation
     max_timesteps: int = int(1e6)  # Max time steps to run environment
