@@ -8,6 +8,7 @@ bert_transformer/
 # original/
 # train/
 # val/
+checkpoints/
 REDQ/
 wandb/
 *.csv
