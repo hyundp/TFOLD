@@ -149,7 +149,7 @@ if __name__ == '__main__':
             
             real_reward = real_reward*reward_std+reward_mean
             reward_mse.append(rewardmse)
-            dynamic_mse.append(mse)
+            dynamic_mse.append(mse + rewardmse)
             real_rewards.append(real_reward)
             gen_rewards.append(data[epi]["rewards"][timestep])
 
